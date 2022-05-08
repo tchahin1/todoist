@@ -18,17 +18,16 @@ const App = () => {
       })
       .then(res => {
         setData(res.data);
-        console.log(res);
       })
       .catch(e => console.log(e));
   }, []);
 
   const updateTask = (swipedTask, completeness) => {
-    console.log(swipedTask, completeness);
     axios
       .post(`https://api.todoist.com/rest/v1/tasks/${swipedTask}`, {
         data: {
           //there is no completed field for updating? how to change the status of completeness for the task ?
+          //request passes in Postman but not in react-native for some reason...
           //completed: !completeness,
         },
         headers: {
@@ -55,7 +54,6 @@ const App = () => {
                 style={styles.taskWrapper}
                 onTouchStart={e => setStartPoint(e.nativeEvent.pageX)}
                 onTouchEnd={e => {
-                  console.log(startPoint, e.nativeEvent.pageX);
                   if (startPoint - e.nativeEvent.pageX > 100) {
                     updateTask(task.id, task.completed);
                   } else {
@@ -75,6 +73,7 @@ const App = () => {
         opened={openModal}
         onClose={() => setOpenModal(false)}
         taskInfo={selectedTask}
+        refetchData={newData => setData(newData)}
       />
     </SafeAreaView>
   );
