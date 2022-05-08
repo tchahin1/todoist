@@ -30,6 +30,23 @@ const App = () => {
       .catch(e => console.log(e));
   }, []);
 
+  //this method here needs a uuid as stated in the api overview, but I can't seem to find it anywhere in the responses I got earlier..
+  const updateTask = (swipedTask, completeness) => {
+    console.log(swipedTask, completeness);
+    axios
+      .post(`https://api.todoist.com/rest/v1/tasks/${swipedTask}`, {
+        data: {
+          completed: !completeness,
+        },
+        headers: {
+          Authorization: 'Bearer ab9855583345f7886c83ac8d4afffe0832c7e975',
+          //Uuid: 'MISSING',
+        },
+      })
+      .then(res => setData(res.data))
+      .catch(e => console.log(e));
+  };
+
   return (
     <SafeAreaView style={{flex: 1}}>
       <ScrollView style={{flex: 1, height: '100%', width: '100%'}}>
@@ -37,7 +54,16 @@ const App = () => {
           data.length !== 0 &&
           data.map((task, index) => {
             return (
-              <View key={task.id} style={{width: '100%', height: 50}}>
+              <View
+                key={task.id}
+                style={{width: '100%', height: 50}}
+                onTouchStart={e => setStartPoint(e.nativeEvent.pageX)}
+                onTouchEnd={e => {
+                  console.log(startPoint, e.nativeEvent.pageX);
+                  if (startPoint - e.nativeEvent.pageX > 100) {
+                    updateTask(task.id, task.completed);
+                  }
+                }}>
                 <Text style={{color: task.completed ? 'green' : 'red'}}>
                   {task.content}
                 </Text>
