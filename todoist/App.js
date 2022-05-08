@@ -1,20 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
 import axios from 'axios';
+import TaskModal from './TaskModal';
 
 const App = () => {
   const [data, setData] = useState();
   const [startPoint, setStartPoint] = useState();
-  const [swipedTask, setSwipedTask] = useState();
-  const [swipedTaskCompleteness, setSwipedTaskCompleteness] = useState();
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState();
 
   useEffect(() => {
     axios
@@ -30,68 +23,77 @@ const App = () => {
       .catch(e => console.log(e));
   }, []);
 
-  //this method here needs a uuid as stated in the api overview, but I can't seem to find it anywhere in the responses I got earlier..
   const updateTask = (swipedTask, completeness) => {
     console.log(swipedTask, completeness);
     axios
       .post(`https://api.todoist.com/rest/v1/tasks/${swipedTask}`, {
         data: {
-          completed: !completeness,
+          //there is no completed field for updating? how to change the status of completeness for the task ?
+          //completed: !completeness,
         },
         headers: {
           Authorization: 'Bearer ab9855583345f7886c83ac8d4afffe0832c7e975',
-          //Uuid: 'MISSING',
         },
       })
-      .then(res => setData(res.data))
+      .then(res => {
+        setData(res.data);
+      })
       .catch(e => console.log(e));
   };
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <ScrollView style={{flex: 1, height: '100%', width: '100%'}}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContentContainer}>
         {data &&
           data.length !== 0 &&
           data.map((task, index) => {
             return (
               <View
                 key={task.id}
-                style={{width: '100%', height: 50}}
+                style={styles.taskWrapper}
                 onTouchStart={e => setStartPoint(e.nativeEvent.pageX)}
                 onTouchEnd={e => {
                   console.log(startPoint, e.nativeEvent.pageX);
                   if (startPoint - e.nativeEvent.pageX > 100) {
                     updateTask(task.id, task.completed);
+                  } else {
+                    setSelectedTask(task);
+                    setOpenModal(true);
                   }
                 }}>
                 <Text style={{color: task.completed ? 'green' : 'red'}}>
+                  {/*I just noticed this should be a "contact" field but I can't seem to understand or see that field in the response*/}
                   {task.content}
                 </Text>
               </View>
             );
           })}
       </ScrollView>
+      <TaskModal
+        opened={openModal}
+        onClose={() => setOpenModal(false)}
+        taskInfo={selectedTask}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  taskWrapper: {
+    width: '100%',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 6,
+    marginTop: 30,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
+  scrollContainer: {flex: 1, height: '100%', width: '100%'},
+  scrollContentContainer: {paddingHorizontal: 20},
+  container: {flex: 1},
 });
 
 export default App;
